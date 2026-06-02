@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-demo-app-service
+  namespace: default
+  labels:
+    app: devops-demo-app
+  annotations:
+    # For AWS EKS - provisions an ELB automatically
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: LoadBalancer
+  selector:
+    app: devops-demo-app
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80          # External port
+      targetPort: 3000  # Container port
+
+---
+# Internal ClusterIP service for Prometheus scraping
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-demo-app-internal
+  namespace: default
+  labels:
+    app: devops-demo-app
+spec:
+  type: ClusterIP
+  selector:
+    app: devops-demo-app
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 3000
+      targetPort: 3000

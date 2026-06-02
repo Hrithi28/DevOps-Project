@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+*.md
+coverage
+.nyc_output
+terraform
+k8s
+jenkins
+ansible
+docs
+scripts
