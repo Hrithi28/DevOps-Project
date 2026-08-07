@@ -12,11 +12,16 @@ COPY app/ .
 
 # Run tests in build stage
 FROM node:20-alpine AS tester
+
 WORKDIR /app
+
 COPY app/package*.json ./
+
 RUN npm ci
+
 COPY app/ .
-RUN npm test
+
+CMD ["npm","test"]
 
 # ─── Stage 2: Production image ───────────────────────────────────────────────
 FROM node:20-alpine AS production
