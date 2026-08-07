@@ -37,14 +37,16 @@ pipeline {
         }
 
         stage('Run Tests') {
-            steps {
-                sh """
-                    docker run --rm \
-                    ${IMAGE_NAME}:${IMAGE_TAG} \
-                    npm test
-                """
-            }
-        }
+    steps {
+        sh """
+            docker build \
+                --target tester \
+                -t ${APP_NAME}-tester .
+
+            docker run --rm ${APP_NAME}-tester
+        """
+    }
+}
 
         stage('Security Scan') {
             steps {
