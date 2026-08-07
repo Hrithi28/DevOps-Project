@@ -6,13 +6,9 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.23"
-    }
   }
 
-  # Store state remotely in S3 (recommended for teams)
+  /*
   backend "s3" {
     bucket         = "devops-project-tfstate"
     key            = "global/s3/terraform.tfstate"
@@ -20,6 +16,7 @@ terraform {
     encrypt        = true
     dynamodb_table = "terraform-lock"
   }
+  */
 }
 
 provider "aws" {
@@ -54,33 +51,17 @@ module "iam" {
   environment  = var.environment
 }
 
-# ─── EKS Cluster (use this for Kubernetes) ───────────────────────────────────
-module "eks" {
-  source = "./modules/eks"
-
-  project_name       = var.project_name
-  environment        = var.environment
-  cluster_version    = var.eks_cluster_version
-  vpc_id             = module.vpc.vpc_id
-  private_subnet_ids = module.vpc.private_subnet_ids
-  node_instance_type = var.node_instance_type
-  node_desired_size  = var.node_desired_size
-  node_min_size      = var.node_min_size
-  node_max_size      = var.node_max_size
-  eks_role_arn       = module.iam.eks_cluster_role_arn
-  node_role_arn      = module.iam.eks_node_role_arn
-}
 
 # ─── EC2 Instance (Jenkins server) ───────────────────────────────────────────
 module "ec2" {
   source = "./modules/ec2"
 
-  project_name    = var.project_name
-  environment     = var.environment
-  ami_id          = var.jenkins_ami_id
-  instance_type   = var.jenkins_instance_type
-  subnet_id       = module.vpc.public_subnet_ids[0]
-  vpc_id          = module.vpc.vpc_id
-  key_name        = var.key_name
+  project_name     = var.project_name
+  environment      = var.environment
+  ami_id           = var.jenkins_ami_id
+  instance_type    = var.jenkins_instance_type
+  subnet_id        = module.vpc.public_subnet_ids[0]
+  vpc_id           = module.vpc.vpc_id
+  key_name         = var.key_name
   jenkins_role_arn = module.iam.jenkins_role_arn
 }

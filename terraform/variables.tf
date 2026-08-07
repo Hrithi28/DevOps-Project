@@ -56,7 +56,7 @@ variable "eks_cluster_version" {
 variable "node_instance_type" {
   description = "EC2 instance type for EKS worker nodes"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "node_desired_size" {
@@ -81,13 +81,13 @@ variable "node_max_size" {
 variable "jenkins_ami_id" {
   description = "AMI ID for Jenkins EC2 instance (Amazon Linux 2023)"
   type        = string
-  default     = "ami-0c55b159cbfafe1f0"  # Update for your region
+  default     = "ami-0bdc7d025135d7b49" # Update for your region
 }
 
 variable "jenkins_instance_type" {
   description = "EC2 instance type for Jenkins server"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "key_name" {

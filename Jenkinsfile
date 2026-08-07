@@ -2,21 +2,14 @@ pipeline {
     agent any
 
     environment {
-        // ── Update these for your setup ──────────────────────────────────────
-        APP_NAME        = 'devops-demo-app'
-        DOCKER_REGISTRY = 'your-dockerhub-username'          // or your ECR URL
-        IMAGE_NAME      = "${DOCKER_REGISTRY}/${APP_NAME}"
-        K8S_NAMESPACE   = 'default'
-        AWS_REGION      = 'us-east-1'
-        EKS_CLUSTER     = 'devops-demo-dev-cluster'
-        // ─────────────────────────────────────────────────────────────────────
+    APP_NAME = "devops-demo-app"
+    DOCKER_REGISTRY = "hrith"
+    IMAGE_NAME = "${DOCKER_REGISTRY}/${APP_NAME}"
 
-        // Jenkins credentials IDs (configure in Jenkins → Credentials)
-        DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
-        KUBECONFIG_FILE    = credentials('kubeconfig')
+    DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
 
-        IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
-    }
+    IMAGE_TAG = "${BUILD_NUMBER}"
+}
 
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
@@ -98,75 +91,15 @@ pipeline {
                 script {
                     echo "Pushing to Docker Hub..."
                     sh """
-                        echo ${DOCKER_CREDENTIALS_PSW} | docker login \
-                            -u ${DOCKER_CREDENTIALS_USR} --password-stdin
+                        echo "${DOCKER_CREDENTIALS_PSW}" | docker login \
+-u "${DOCKER_CREDENTIALS_USR}" \
+--password-stdin
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
                         docker push ${IMAGE_NAME}:latest
                     """
                 }
             }
         }
-
-        // ── 6. Update K8s Manifests ──────────────────────────────────────
-        stage('Update Manifests') {
-            steps {
-                script {
-                    echo "Updating K8s deployment image tag to ${IMAGE_TAG}..."
-                    sh """
-                        sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' \
-                            k8s/base/deployment.yaml
-                    """
-                }
-            }
-        }
-
-        // ── 7. Deploy to Kubernetes ───────────────────────────────────────
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    echo "Deploying to EKS cluster: ${EKS_CLUSTER}"
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            export KUBECONFIG=${KUBECONFIG}
-
-                            # Apply all manifests
-                            kubectl apply -f k8s/base/namespace.yaml
-                            kubectl apply -f k8s/base/deployment.yaml
-                            kubectl apply -f k8s/base/service.yaml
-                            kubectl apply -f k8s/base/hpa.yaml
-
-                            # Wait for rollout to complete
-                            kubectl rollout status deployment/${APP_NAME} \
-                                -n ${K8S_NAMESPACE} \
-                                --timeout=300s
-
-                            echo "Deployment successful!"
-                            kubectl get pods -n ${K8S_NAMESPACE} -l app=${APP_NAME}
-                        """
-                    }
-                }
-            }
-        }
-
-        // ── 8. Smoke Test ────────────────────────────────────────────────
-        stage('Smoke Test') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                        sh """
-                            export KUBECONFIG=${KUBECONFIG}
-                            SERVICE_URL=\$(kubectl get svc ${APP_NAME}-service \
-                                -n ${K8S_NAMESPACE} \
-                                -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
-                            echo "Testing service at: \$SERVICE_URL"
-                            sleep 10
-                            curl -sf http://\$SERVICE_URL/health || echo "Health check pending..."
-                        """
-                    }
-                }
-            }
-        }
-    }
 
     post {
         success {
