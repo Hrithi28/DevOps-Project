@@ -1,30 +1,29 @@
 # ─── Stage 1: Build & test ───────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20-alpine3.23 AS builder
 
 WORKDIR /app
 
 # Install dependencies first (layer cache optimisation)
 COPY app/package*.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # Copy source
 COPY app/ .
 
 # Run tests in build stage
-FROM node:20-alpine AS tester
+FROM node:20-alpine3.23 AS tester
 
 WORKDIR /app
 
 COPY app/package*.json ./
-
 RUN npm ci
 
 COPY app/ .
 
-CMD ["npm","test"]
+CMD ["npm", "test", "--", "--forceExit"]
 
 # ─── Stage 2: Production image ───────────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:20-alpine3.23 AS production
 
 # Security: run as non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S appuser -u 1001
