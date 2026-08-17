@@ -56,7 +56,7 @@ pipeline {
                             .
                     """
 
-                    echo "Running tests..."
+                    echo "Running Jest tests..."
 
                     sh """
                         docker run --rm \
@@ -102,7 +102,7 @@ pipeline {
                             --password-stdin
                     """
 
-                    echo "Pushing ${IMAGE_NAME}:${IMAGE_TAG}..."
+                    echo "Pushing image..."
 
                     sh """
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
@@ -119,7 +119,7 @@ pipeline {
         }
 
         failure {
-            echo "Pipeline FAILED — check the console logs above"
+            echo "Pipeline FAILED — check the console logs"
         }
 
         always {
