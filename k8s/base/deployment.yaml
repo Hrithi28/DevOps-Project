@@ -38,7 +38,7 @@ spec:
 
       containers:
         - name: devops-demo-app
-          image: your-dockerhub-username/devops-demo-app:latest   # Updated by Jenkins
+          image: hrith/devops-demo-app:latest   # Updated by Jenkins
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -85,7 +85,7 @@ spec:
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
+          whenUnsatisfiable: ScheduleAnyway
           labelSelector:
             matchLabels:
               app: devops-demo-app
