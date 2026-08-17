@@ -56,6 +56,7 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
+
 # Container healthcheck
 HEALTHCHECK --interval=30s \
   --timeout=5s \
